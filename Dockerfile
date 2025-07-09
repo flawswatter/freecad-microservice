@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# ✅ Correct FreeCAD AppImage URL
+# Download correct FreeCAD AppImage
 RUN wget https://github.com/FreeCAD/FreeCAD/releases/download/0.21.2/FreeCAD-0.21.2-Linux-x86_64.AppImage -O FreeCAD.AppImage && \
     chmod +x FreeCAD.AppImage && \
     ./FreeCAD.AppImage --appimage-extract
@@ -25,4 +25,5 @@ COPY main.py .
 ENV LD_LIBRARY_PATH=/app/squashfs-root/usr/lib:$LD_LIBRARY_PATH
 ENV PYTHONPATH=/app/squashfs-root/usr/lib/python3.10/site-packages:$PYTHONPATH
 
-CMD ["/app/squashfs-root/usr/bin/python3", "main.py"]
+# ✅ Run with FreeCAD's Python
+CMD ["./squashfs-root/usr/bin/python3", "main.py"]

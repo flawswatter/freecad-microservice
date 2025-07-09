@@ -4,20 +4,21 @@ import os
 import tempfile
 import traceback
 import importlib.util
-
-# Setup FreeCAD paths (adjust for AppImage or APT install as needed)
 import sys
-sys.path.append("/opt/freecad/usr/lib")
-sys.path.append("/opt/freecad/usr/Mod/SheetMetal")
 
+# ✅ Point to FreeCAD AppImage-extracted modules
+sys.path.append("/app/squashfs-root/usr/lib")
+sys.path.append("/app/squashfs-root/usr/Mod/SheetMetal")
+
+# ✅ Import FreeCAD and Part
 import FreeCAD
 import Part
 
-# Dynamically import SheetMetalUnfolder
+# ✅ Dynamically import SheetMetalUnfolder if available
 try:
     spec = importlib.util.spec_from_file_location(
         "SheetMetalUnfolder",
-        "/opt/freecad/usr/Mod/SheetMetal/SheetMetalUnfolder.py"
+        "/app/squashfs-root/usr/Mod/SheetMetal/SheetMetalUnfolder.py"
     )
     SheetMetalUnfolder = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(SheetMetalUnfolder)
