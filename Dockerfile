@@ -1,29 +1,38 @@
 FROM ubuntu:22.04
 
-# Install system libraries
+# Install system dependencies
 RUN apt-get update && \
     apt-get install -y \
-        python3 python3-pip wget ca-certificates \
-        libgl1 libxcb1 libx11-6 libxrender1 libxext6 libsm6 && \
+        python3 \
+        python3-pip \
+        wget \
+        ca-certificates \
+        libgl1 \
+        libxcb1 \
+        libx11-6 \
+        libxrender1 \
+        libxext6 \
+        libsm6 && \
     apt-get clean
 
+# Set working directory
 WORKDIR /app
 
-# Copy app code
+# Copy app source
 COPY requirements.txt .
 COPY main.py .
 
-# Install dependencies
+# Install Python packages
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# ✅ Download and unpack FreeCAD 0.21.0 AppImage from SourceForge
+# ✅ Download and unpack FreeCAD 0.21.0 AppImage (confirmed working)
 RUN wget https://sourceforge.net/projects/free-cad/files/0.21.0/FreeCAD_0.21.0-Linux-x86_64.AppImage/download -O FreeCAD.AppImage && \
     chmod +x FreeCAD.AppImage && \
     ./FreeCAD.AppImage --appimage-extract
 
-# Set environment for FreeCAD modules
-ENV PYTHONPATH="/app/squashfs-root/usr/lib/python3.10/site-packages:/app/squashfs-root/usr/lib"
+# ✅ Set FreeCAD-only libraries (exclude site-packages to avoid conflict)
+ENV PYTHONPATH="/app/squashfs-root/usr/lib:/app"
 ENV PATH="/app/squashfs-root/usr/bin:$PATH"
 
-# Run the API
+# Start the API
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
