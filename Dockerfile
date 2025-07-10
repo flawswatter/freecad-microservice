@@ -30,6 +30,12 @@ RUN wget https://sourceforge.net/projects/free-cad/files/0.21.0/FreeCAD_0.21.0-L
     chmod +x FreeCAD.AppImage && \
     ./FreeCAD.AppImage --appimage-extract
 
+    # Clone the SheetMetal module manually
+RUN git clone https://github.com/shaise/FreeCAD_SheetMetal.git /app/Mod/SheetMetal
+
+# Set FreeCAD module path
+ENV FREECAD_MOD_PATH=/app/Mod
+
 # ✅ Set FreeCAD-only libraries (exclude site-packages to avoid conflict)
 ENV PYTHONPATH="/app/squashfs-root/usr/lib:/app"
 ENV PATH="/app/squashfs-root/usr/bin:$PATH"
