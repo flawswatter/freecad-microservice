@@ -12,7 +12,8 @@ RUN apt-get update && \
         libxrender1 \
         libxext6 \
         libsm6 \
-        && apt-get clean
+        ca-certificates && \
+    apt-get clean
 
 WORKDIR /app
 
@@ -23,14 +24,13 @@ COPY main.py .
 # Install Python dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# ✅ Download and extract the COMPATIBLE FreeCAD 0.21.1 AppImage
-RUN wget https://github.com/FreeCAD/FreeCAD/releases/download/0.21.1/FreeCAD-0.21.1-Linux-x86_64.AppImage -O FreeCAD.AppImage && \
+# ✅ Download and extract FreeCAD 0.21.1 AppImage (with cert workaround)
+RUN wget --no-check-certificate https://github.com/FreeCAD/FreeCAD/releases/download/0.21.1/FreeCAD-0.21.1-Linux-x86_64.AppImage -O FreeCAD.AppImage && \
     chmod +x FreeCAD.AppImage && \
     ./FreeCAD.AppImage --appimage-extract
 
-# Set environment variables so FreeCAD libs are found
+# Set FreeCAD environment
 ENV PYTHONPATH="/app/squashfs-root/usr/lib/python3.10/site-packages:/app/squashfs-root/usr/lib"
 ENV PATH="/app/squashfs-root/usr/bin:$PATH"
 
-# Run the API
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
