@@ -47,15 +47,45 @@ async def unfold(file: UploadFile = File(...)):
 
         parsed_layers = []
         parsed_notes = []
+        units_detected = "unknown"
+        scaling_factor = 1.0
 
         if suffix == ".dxf":
-            # Pre-parse DXF as text using ezdxf
+            # Parse with ezdxf
             dxf_doc = ezdxf.readfile(tmp_path)
+
+            # Detect units
+            header_vars = dxf_doc.header
+            units = header_vars.get('$INSUNITS', 0)  # 4 = mm, 1 = inch
+            if units == 4:
+                units_detected = "mm"
+                scaling_factor = 0.03937
+            elif units == 1:
+                units_detected = "inch"
+                scaling_factor = 1.0
+
+            # Extract layers and notes
             parsed_layers = [layer.dxf.name for layer in dxf_doc.layers]
             parsed_notes = [e.dxf.text for e in dxf_doc.query('TEXT')]
 
+            # Scale entities
+            if scaling_factor != 1.0:
+                msp = dxf_doc.modelspace()
+                for e in msp:
+                    try:
+                        e.scale_uniform(scaling_factor)
+                    except Exception:
+                        continue
+
+            # Save as ASCII DXF for FreeCAD
+            ascii_path = tmp_path + "_ascii.dxf"
+            dxf_doc.saveas(ascii_path, encoding="utf-8")
+            tmp_path = ascii_path
+
+            # Import into FreeCAD
             Import.importDXF(tmp_path)
             obj = doc.Objects[-1]
+
         else:
             shape = Part.read(tmp_path)
             obj = doc.addObject("Part::Feature", "ImportedPart")
@@ -91,7 +121,8 @@ async def unfold(file: UploadFile = File(...)):
             "flat_pattern": flat_result,
             "flat_dxf": dxf_data,
             "parsed_layers": parsed_layers,
-            "parsed_notes": parsed_notes
+            "parsed_notes": parsed_notes,
+            "dxf_units": units_detected
         })
 
     except Exception as e:
