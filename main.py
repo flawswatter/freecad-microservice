@@ -1,10 +1,11 @@
 from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse
 import os
 import tempfile
 import traceback
 import importlib.util
 import sys
+import ezdxf  # DXF text parser
 
 # Setup FreeCAD paths for AppImage
 sys.path.append("/app/squashfs-root/usr/lib")
@@ -43,8 +44,16 @@ async def unfold(file: UploadFile = File(...)):
             tmp_path = tmp.name
 
         doc = FreeCAD.newDocument()
-        
+
+        parsed_layers = []
+        parsed_notes = []
+
         if suffix == ".dxf":
+            # Pre-parse DXF as text using ezdxf
+            dxf_doc = ezdxf.readfile(tmp_path)
+            parsed_layers = [layer.dxf.name for layer in dxf_doc.layers]
+            parsed_notes = [e.dxf.text for e in dxf_doc.query('TEXT')]
+
             Import.importDXF(tmp_path)
             obj = doc.Objects[-1]
         else:
@@ -66,7 +75,6 @@ async def unfold(file: UploadFile = File(...)):
                 "flat_y_mm": flat_bb.YLength
             }
 
-            # Export DXF preview to temp file
             with tempfile.NamedTemporaryFile(delete=False, suffix=".dxf") as flat_file:
                 flat_dxf_path = flat_file.name
             Import.export([flat_obj], flat_dxf_path)
@@ -81,7 +89,9 @@ async def unfold(file: UploadFile = File(...)):
                 "z": bbox.ZLength
             },
             "flat_pattern": flat_result,
-            "flat_dxf": dxf_data
+            "flat_dxf": dxf_data,
+            "parsed_layers": parsed_layers,
+            "parsed_notes": parsed_notes
         })
 
     except Exception as e:
