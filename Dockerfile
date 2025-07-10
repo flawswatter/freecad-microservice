@@ -16,13 +16,13 @@ RUN apt-get update && \
         libsm6 \
         libqt5core5a \
         libqt5gui5 \
+        libqt5widgets5 \
         libqt5network5 \
+        libqt5svg5 \
         && apt-get clean
 
-
-# ✅ NEW BLOCK
-# Install git for cloning SheetMetal
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+# Force PySide2 to use system Qt5 instead of its internal .so files
+ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu
 
 # Set working directory
 WORKDIR /app
