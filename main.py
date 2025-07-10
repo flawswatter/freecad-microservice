@@ -19,7 +19,7 @@ import Import
 try:
     spec = importlib.util.spec_from_file_location(
         "SheetMetalUnfolder",
-        "/app/squashfs-root/usr/Mod/SheetMetal/SheetMetalUnfolder.py"
+        "/app/Mod/SheetMetal/SheetMetalUnfolder.py"
     )
     SheetMetalUnfolder = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(SheetMetalUnfolder)
