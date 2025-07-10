@@ -7,13 +7,18 @@ RUN apt-get update && \
         python3-pip \
         wget \
         ca-certificates \
+        git \
         libgl1 \
         libxcb1 \
         libx11-6 \
         libxrender1 \
         libxext6 \
-        libsm6 && \
-    apt-get clean
+        libsm6 \
+        libqt5core5a \
+        libqt5gui5 \
+        libqt5network5 \
+        && apt-get clean
+
 
 # ✅ NEW BLOCK
 # Install git for cloning SheetMetal
