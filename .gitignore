@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Editor
+.vscode/
+*.swp
+*.bak
+*.tmp
+
+# Logs
+*.log
+
+# DXF temp
+*_ascii.dxf
+*.unfolded.dxf
+*.dxf_ascii*
+flat_*.dxf
+
+# Temp exports
+*.tmp
+*.export.dxf
+
+# Hard test artifacts
+main_freecad_hardened.py
+
+# SheetMetal cache
+sheetmetal/__pycache__/
+sheetmetal/*.pyc
