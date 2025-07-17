@@ -11,14 +11,15 @@ import magic
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-# Set up logging
+# Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Add FreeCAD paths
+# FreeCAD paths
 sys.path.append("/usr/lib/freecad-python3/lib")
 sys.path.append("/usr/share/freecad/Mod/SheetMetal")
 sys.path.append("/usr/lib/freecad/Mod")
@@ -31,7 +32,7 @@ import Part
 import Import
 import Draft
 
-# Mock GUI dependencies
+# Handle import fallbacks
 try:
     import importDXF
 except ImportError:
@@ -52,7 +53,7 @@ except ImportError:
     importSVG.export = Import.export
     sys.modules["importSVG"] = importSVG
 
-# Load SheetMetal workbench
+# Load SheetMetal
 try:
     spec = importlib.util.spec_from_file_location(
         "SheetMetalUnfolder",
@@ -68,16 +69,11 @@ except Exception as e:
 def mm_to_inches(val_mm, decimals=3):
     return round(val_mm * 0.0393701, decimals)
 
+# App + limiter setup
 app = FastAPI()
 limiter = Limiter(key_func=get_remote_address, default_limits=["10/minute"])
 app.state.limiter = limiter
-
-@app.middleware("http")
-async def rate_limit_middleware(request: Request, call_next):
-    try:
-        return await limiter(request, call_next)
-    except RateLimitExceeded:
-        return Response("429 Too Many Requests", status_code=429)
+app.add_middleware(SlowAPIMiddleware)
 
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
@@ -99,14 +95,11 @@ def unfold(file: UploadFile = File(...)):
         if size_mb > 2:
             return JSONResponse(status_code=413, content={"error": "File too large. Max 2MB"})
 
-        # Check MIME
+        # MIME check
         mime = magic.from_buffer(file.file.read(2048), mime=True)
         file.file.seek(0)
         if mime not in ["application/dxf", "application/octet-stream", "text/plain"]:
-            return JSONResponse(status_code=415, content={
-                "error": "Unsupported file type",
-                "detected_mime": mime
-            })
+            return JSONResponse(status_code=415, content={"error": "Unsupported file type", "detected_mime": mime})
 
         suffix = os.path.splitext(file.filename)[-1].lower()
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
