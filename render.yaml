@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: freecad-microservice
+    env: docker
+    repo: https://github.com/flawswatter/freecad-microservice
+    branch: main
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /
+    envVars:
+      - key: UVICORN_CMD
+        value: "uvicorn main_freecad:app --host 0.0.0.0 --port 8000"
